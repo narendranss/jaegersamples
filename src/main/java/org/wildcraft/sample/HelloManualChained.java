@@ -1,7 +1,6 @@
 package org.wildcraft.sample;
 
 import com.google.common.collect.ImmutableMap;
-
 import io.jaegertracing.internal.JaegerObjectFactory;
 import io.jaegertracing.internal.JaegerSpanContext;
 import io.jaegertracing.internal.JaegerTracer;
@@ -11,12 +10,14 @@ import io.jaegertracing.internal.clock.SystemClock;
 import io.opentracing.References;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
-
 import org.wildcraft.util.Tracing;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class HelloManual {
+public class HelloManualChained {
 
     private final Tracer tracer;
 
@@ -26,12 +27,36 @@ public class HelloManual {
 
     private final Map<String, Object> tags = new HashMap<String, Object>();
 
-    private HelloManual(Tracer tracer) {
+    private HelloManualChained(Tracer tracer) {
         this.tracer = tracer;
     }
 
     private void sayHello(String helloTo) {
-        Span span = tracer.buildSpan("say-manual-hello").start();
+        byte flagSampled = 1;
+        JaegerSpanContext spanContext = jaegerObjectFactory.createSpanContext(0, 150, 150, 0, flagSampled, new HashMap<String, String>(),null);
+
+        Reference reference = new Reference(spanContext, References.CHILD_OF);
+
+        List<Reference> references = new ArrayList<>();
+        references.add(reference);
+
+        long startTimeNanoTicks = 0;
+        boolean computeDurationViaNanoTicks = false;
+        long startTimeMicroseconds =0;
+
+        if (startTimeMicroseconds == 0) {
+            startTimeMicroseconds = clock.currentTimeMicros();
+            if (!clock.isMicrosAccurate()) {
+                startTimeNanoTicks = clock.currentNanoTicks();
+                computeDurationViaNanoTicks = true;
+            }
+        }
+
+        System.out.println("startTimeMicroseconds: "+startTimeMicroseconds);
+        System.out.println("startTimeNanoTicks: "+startTimeNanoTicks);
+        Span span = jaegerObjectFactory.createSpan((JaegerTracer) tracer, "say-manual-hello", spanContext, 1577104503120000L, 33383308737599L, computeDurationViaNanoTicks, tags, references);
+
+        //Span span = tracer.buildSpan("say-manual-hello").start();
         span.setTag("hello-to", helloTo);
         span.setTag("hello-fin", helloTo);
 
@@ -69,7 +94,7 @@ public class HelloManual {
 
         String helloTo = args[0];
         try (JaegerTracer tracer = Tracing.init("hello-usertraceid-world")) {
-            new HelloManual(tracer).sayHello(helloTo);
+            new HelloManualChained(tracer).sayHello(helloTo);
         }
     }
 }
