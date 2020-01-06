@@ -3,12 +3,9 @@ package org.wildcraft.sample;
 import com.google.common.collect.ImmutableMap;
 
 import io.jaegertracing.internal.JaegerObjectFactory;
-import io.jaegertracing.internal.JaegerSpanContext;
 import io.jaegertracing.internal.JaegerTracer;
-import io.jaegertracing.internal.Reference;
 import io.jaegertracing.internal.clock.Clock;
 import io.jaegertracing.internal.clock.SystemClock;
-import io.opentracing.References;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 
@@ -63,6 +60,8 @@ public class HelloManual {
     }
 
     public static void main(String[] args) {
+
+        //System.setProperty("JAEGER_ENDPOINT", "http://10.10.10.10:14268/api/traces");
         if (args.length != 1) {
             throw new IllegalArgumentException("Expecting one argument");
         }
